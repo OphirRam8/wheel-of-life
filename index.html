@@ -127,17 +127,19 @@
 
   .slider-thumb {
     position: absolute;
-    right: -16px;
+    right: -18px;
     top: 50%;
     transform: translateY(-50%);
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     box-shadow: 0 1px 6px rgba(0,0,0,0.25);
-    pointer-events: none;
+    pointer-events: auto;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: grab;
+    touch-action: none;
   }
 
   .slider-value {
@@ -363,7 +365,7 @@ function createSliders() {
     track.appendChild(fill);
     row.appendChild(track);
 
-    // Touch and mouse handling directly on the row
+    // Only the thumb (circle) triggers dragging
     let dragging = false;
 
     function calcValue(clientX) {
@@ -372,11 +374,10 @@ function createSliders() {
       return (x / rect.width) * 100;
     }
 
-    function onStart(e) {
+    function onThumbStart(e) {
       e.preventDefault();
+      e.stopPropagation();
       dragging = true;
-      const val = calcValue(getPointerX(e));
-      updateSlider(i, val, fill, valueLabel);
     }
 
     function onMove(e) {
@@ -390,8 +391,8 @@ function createSliders() {
       dragging = false;
     }
 
-    row.addEventListener('mousedown', onStart);
-    row.addEventListener('touchstart', onStart, { passive: false });
+    thumb.addEventListener('mousedown', onThumbStart);
+    thumb.addEventListener('touchstart', onThumbStart, { passive: false });
     document.addEventListener('mousemove', onMove);
     document.addEventListener('touchmove', onMove, { passive: false });
     document.addEventListener('mouseup', onEnd);
