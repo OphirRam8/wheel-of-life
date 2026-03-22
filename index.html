@@ -119,32 +119,29 @@
   .slider-fill {
     height: 100%;
     border-radius: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 10px;
-    min-width: 44px;
     position: relative;
-  }
-
-  .slider-value {
-    font-size: 14px;
-    font-weight: 700;
-    color: #fff;
-    user-select: none;
-    pointer-events: none;
   }
 
   .slider-thumb {
     position: absolute;
-    right: -12px;
+    right: -16px;
     top: 50%;
     transform: translateY(-50%);
-    width: 28px;
-    height: 28px;
-    background: #fff;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     box-shadow: 0 1px 6px rgba(0,0,0,0.25);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .slider-value {
+    font-size: 11px;
+    font-weight: 800;
+    color: #fff;
+    user-select: none;
     pointer-events: none;
   }
 
@@ -345,7 +342,8 @@ function createSliders() {
     const thumb = document.createElement('div');
     thumb.className = 'slider-thumb';
 
-    fill.appendChild(valueLabel);
+    thumb.style.background = cat.color;
+    thumb.appendChild(valueLabel);
     fill.appendChild(thumb);
     track.appendChild(fill);
     row.appendChild(track);
