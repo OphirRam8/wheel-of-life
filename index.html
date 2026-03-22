@@ -47,13 +47,16 @@
     margin: 0 auto;
   }
 
+  .wheel-sticky {
+    position: sticky;
+    top: 24px;
+    flex-shrink: 0;
+  }
+
   .wheel-container {
     position: relative;
     width: 400px;
     height: 400px;
-    flex-shrink: 0;
-    position: sticky;
-    top: 24px;
   }
 
   canvas {
@@ -182,9 +185,11 @@
 </div>
 
 <div class="layout">
-  <div class="wheel-container">
-    <canvas id="wheel" width="800" height="800"></canvas>
-    <div class="center-score" id="centerScore">0</div>
+  <div class="wheel-sticky">
+    <div class="wheel-container">
+      <canvas id="wheel" width="800" height="800"></canvas>
+      <div class="center-score" id="centerScore">0</div>
+    </div>
   </div>
 
   <div class="sliders" id="sliders"></div>
