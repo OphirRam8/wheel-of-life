@@ -108,6 +108,7 @@
     height: 28px;
     touch-action: none;
     cursor: pointer;
+    padding: 0 18px;
   }
 
   .slider-track {
@@ -123,6 +124,7 @@
     height: 100%;
     border-radius: 14px;
     position: relative;
+    min-width: 0;
   }
 
   .slider-thumb {
@@ -324,7 +326,7 @@ function drawWheel() {
 function updateSlider(index, val, fill, valueLabel) {
   val = Math.max(0, Math.min(100, Math.round(val / 5) * 5));
   values[index] = val;
-  fill.style.width = Math.max(val, 10) + '%';
+  fill.style.width = val + '%';
   valueLabel.textContent = val;
   drawWheel();
   saveState();
@@ -354,7 +356,7 @@ function createSliders() {
     const fill = document.createElement('div');
     fill.className = 'slider-fill';
     fill.style.background = cat.color;
-    fill.style.width = Math.max(values[i], 10) + '%';
+    fill.style.width = values[i] + '%';
 
     const valueLabel = document.createElement('span');
     valueLabel.className = 'slider-value';
