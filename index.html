@@ -476,13 +476,20 @@ document.getElementById('titleBtn').addEventListener('click', async () => {
       useCORS: true,
     });
     c.toBlob(async (blob) => {
+      // Try clipboard first, fall back to download
       try {
         await navigator.clipboard.write([
           new ClipboardItem({ 'image/png': blob })
         ]);
         showToast('Copied to clipboard!');
       } catch (err) {
-        showToast('Copy failed — try from a secure context');
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'wheel-of-life.png';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Downloaded as image!');
       }
     }, 'image/png');
   } catch (err) {
