@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wheel of Life</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    min-height: 100vh;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 24px;
+  }
+
+  .wheel-container {
+    position: relative;
+    width: 420px;
+    height: 420px;
+    margin-bottom: 32px;
+  }
+
+  canvas {
+    width: 420px;
+    height: 420px;
+  }
+
+  .center-score {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px;
+    height: 44px;
+    background: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 16px;
+    color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 10;
+  }
+
+  .sliders {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .slider-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .slider-label {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+    height: 36px;
+  }
+
+  .slider-track {
+    flex: 1;
+    height: 36px;
+    background: #e8e8e8;
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .slider-fill {
+    height: 100%;
+    border-radius: 18px;
+    transition: width 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    min-width: 40px;
+  }
+
+  .slider-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .slider-thumb {
+    width: 24px;
+    height: 24px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    pointer-events: none;
+    margin-left: -4px;
+    flex-shrink: 0;
+  }
+
+  input[type="range"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 36px;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 5;
+    margin: 0;
+  }
+
+  @media (max-width: 500px) {
+    .wheel-container { width: 320px; height: 320px; }
+    canvas { width: 320px; height: 320px; }
+    .sliders { max-width: 100%; }
+    h1 { font-size: 22px; }
+    body { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Wheel of Life</h1>
+<p class="subtitle">Rate each area of your life from 0 to 100</p>
+
+<div class="wheel-container">
+  <canvas id="wheel" width="840" height="840"></canvas>
+  <div class="center-score" id="centerScore">0</div>
+</div>
+
+<div class="sliders" id="sliders"></div>
+
+<script>
+const categories = [
+  { name: "Physical Body",          color: "#FF6B35" },
+  { name: "Emotions & Meaning",     color: "#9B59B6" },
+  { name: "Relationships",          color: "#E91E63" },
+  { name: "Time",                   color: "#2196F3" },
+  { name: "Work / Career / Mission",color: "#F5A623" },
+  { name: "Finances",               color: "#27AE60" },
+  { name: "Celebrate & Contribute", color: "#00BFA5" },
+  { name: "Personal Growth",        color: "#FF5252" },
+];
+
+const values = categories.map(() => 50);
+
+const canvas = document.getElementById('wheel');
+const ctx = canvas.getContext('2d');
+const W = canvas.width;
+const H = canvas.height;
+const cx = W / 2;
+const cy = H / 2;
+const maxR = W / 2 - 40;
+
+function drawWheel() {
+  ctx.clearRect(0, 0, W, H);
+  const n = categories.length;
+  const angleStep = (2 * Math.PI) / n;
+  const startOffset = -Math.PI / 2;
+
+  // Draw outer circle (border)
+  ctx.beginPath();
+  ctx.arc(cx, cy, maxR, 0, 2 * Math.PI);
+  ctx.strokeStyle = '#e0e0e0';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Draw grid circles
+  for (let i = 1; i <= 4; i++) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, (maxR * i) / 4, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#f0f0f0';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Draw segment lines and "100" labels
+  for (let i = 0; i < n; i++) {
+    const angle = startOffset + i * angleStep;
+    const x = cx + Math.cos(angle) * maxR;
+    const y = cy + Math.sin(angle) * maxR;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = '#e0e0e0';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Draw "100" label at edge
+    const labelR = maxR + 22;
+    const lx = cx + Math.cos(angle) * labelR;
+    const ly = cy + Math.sin(angle) * labelR;
+    ctx.save();
+    ctx.translate(lx, ly);
+    ctx.rotate(angle + Math.PI / 2);
+    ctx.font = 'bold 20px -apple-system, sans-serif';
+    ctx.fillStyle = '#999';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('100', 0, 0);
+    ctx.restore();
+  }
+
+  // Draw filled segments
+  for (let i = 0; i < n; i++) {
+    const angle1 = startOffset + i * angleStep;
+    const angle2 = startOffset + (i + 1) * angleStep;
+    const r = (values[i] / 100) * maxR;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, angle1, angle2);
+    ctx.closePath();
+    ctx.fillStyle = categories[i].color;
+    ctx.fill();
+  }
+
+  // Redraw segment lines on top of fills
+  for (let i = 0; i < n; i++) {
+    const angle = startOffset + i * angleStep;
+    const x = cx + Math.cos(angle) * maxR;
+    const y = cy + Math.sin(angle) * maxR;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+
+  // Center white circle
+  ctx.beginPath();
+  ctx.arc(cx, cy, 26, 0, 2 * Math.PI);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+
+  // Update center score
+  const avg = Math.round(values.reduce((a, b) => a + b, 0) / n);
+  document.getElementById('centerScore').textContent = avg;
+}
+
+function createSliders() {
+  const container = document.getElementById('sliders');
+  categories.forEach((cat, i) => {
+    const group = document.createElement('div');
+    group.className = 'slider-group';
+
+    const label = document.createElement('div');
+    label.className = 'slider-label';
+    label.textContent = cat.name;
+
+    const row = document.createElement('div');
+    row.className = 'slider-row';
+
+    const track = document.createElement('div');
+    track.className = 'slider-track';
+
+    const fill = document.createElement('div');
+    fill.className = 'slider-fill';
+    fill.style.background = cat.color;
+    fill.style.width = values[i] + '%';
+
+    const valueLabel = document.createElement('span');
+    valueLabel.className = 'slider-value';
+    valueLabel.textContent = values[i];
+
+    const thumb = document.createElement('div');
+    thumb.className = 'slider-thumb';
+
+    const input = document.createElement('input');
+    input.type = 'range';
+    input.min = '0';
+    input.max = '100';
+    input.value = values[i];
+
+    input.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value);
+      values[i] = val;
+      fill.style.width = Math.max(val, 8) + '%';
+      valueLabel.textContent = val;
+      drawWheel();
+      saveState();
+    });
+
+    fill.appendChild(valueLabel);
+    track.appendChild(fill);
+    row.appendChild(track);
+    row.appendChild(thumb);
+    row.appendChild(input);
+
+    group.appendChild(label);
+    group.appendChild(row);
+    container.appendChild(group);
+  });
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('wheelOfLife', JSON.stringify(values));
+  } catch (e) {}
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('wheelOfLife');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      parsed.forEach((v, i) => { if (i < values.length) values[i] = v; });
+    }
+  } catch (e) {}
+}
+
+loadState();
+createSliders();
+drawWheel();
+</script>
+</body>
+</html>
