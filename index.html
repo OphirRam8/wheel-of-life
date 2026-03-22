@@ -29,6 +29,33 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.2s;
+  }
+
+  h1:hover {
+    opacity: 0.7;
+  }
+
+  .copy-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #1a1a1a;
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+    pointer-events: none;
+  }
+
+  .copy-toast.show {
+    transform: translateX(-50%) translateY(0);
   }
 
   .subtitle {
@@ -198,9 +225,10 @@
 <body>
 
 <div class="header">
-  <h1>Wheel of Life</h1>
+  <h1 id="titleBtn" title="Click to copy snapshot">Wheel of Life</h1>
   <p class="subtitle">Rate each area of your life from 0 to 100</p>
 </div>
+<div class="copy-toast" id="copyToast"></div>
 
 <div class="layout">
   <div class="wheel-sticky">
@@ -213,6 +241,7 @@
   <div class="sliders" id="sliders"></div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const categories = [
   { name: "Physical Body",          color: "#FF6B35" },
@@ -429,6 +458,37 @@ function loadState() {
 loadState();
 createSliders();
 drawWheel();
+
+// Snapshot & copy to clipboard
+function showToast(msg) {
+  const toast = document.getElementById('copyToast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+document.getElementById('titleBtn').addEventListener('click', async () => {
+  try {
+    const target = document.querySelector('.layout');
+    const c = await html2canvas(target, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true,
+    });
+    c.toBlob(async (blob) => {
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ]);
+        showToast('Copied to clipboard!');
+      } catch (err) {
+        showToast('Copy failed — try from a secure context');
+      }
+    }, 'image/png');
+  } catch (err) {
+    showToast('Snapshot failed');
+  }
+});
 </script>
 </body>
 </html>
