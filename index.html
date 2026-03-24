@@ -29,12 +29,15 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    cursor: pointer;
     user-select: none;
+  }
+
+  #wheelBtn, #lifeBtn {
+    cursor: pointer;
     transition: opacity 0.2s;
   }
 
-  h1:hover {
+  #wheelBtn:hover, #lifeBtn:hover {
     opacity: 0.7;
   }
 
@@ -225,7 +228,11 @@
 <body>
 
 <div class="header">
-  <h1 id="titleBtn" title="Click to copy snapshot">Wheel of Life</h1>
+  <h1>
+    <span id="wheelBtn" title="Copy snapshot to clipboard">Wheel</span>
+    <span class="title-of"> of </span>
+    <span id="lifeBtn" title="Save snapshot as image">Life</span>
+  </h1>
   <p class="subtitle">Rate each area of your life from 0 to 100</p>
 </div>
 <div class="copy-toast" id="copyToast"></div>
@@ -467,30 +474,46 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 2000);
 }
 
-document.getElementById('titleBtn').addEventListener('click', async () => {
+async function captureSnapshot() {
+  const target = document.querySelector('.layout');
+  return html2canvas(target, {
+    backgroundColor: '#ffffff',
+    scale: 2,
+    useCORS: true,
+  });
+}
+
+// WHEEL = copy to clipboard
+document.getElementById('wheelBtn').addEventListener('click', async () => {
   try {
-    const target = document.querySelector('.layout');
-    const c = await html2canvas(target, {
-      backgroundColor: '#ffffff',
-      scale: 2,
-      useCORS: true,
-    });
+    const c = await captureSnapshot();
     c.toBlob(async (blob) => {
-      // Try clipboard first, fall back to download
       try {
         await navigator.clipboard.write([
           new ClipboardItem({ 'image/png': blob })
         ]);
         showToast('Copied to clipboard!');
       } catch (err) {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'wheel-of-life.png';
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('Downloaded as image!');
+        showToast('Clipboard not available');
       }
+    }, 'image/png');
+  } catch (err) {
+    showToast('Snapshot failed');
+  }
+});
+
+// LIFE = save as image
+document.getElementById('lifeBtn').addEventListener('click', async () => {
+  try {
+    const c = await captureSnapshot();
+    c.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'wheel-of-life.png';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Saved as image!');
     }, 'image/png');
   } catch (err) {
     showToast('Snapshot failed');
