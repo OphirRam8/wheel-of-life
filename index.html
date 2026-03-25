@@ -30,15 +30,31 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
     user-select: none;
-  }
-
-  #wheelBtn, #lifeBtn {
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: filter 0.3s;
   }
 
-  #wheelBtn:hover, #lifeBtn:hover {
-    opacity: 0.7;
+  h1:active {
+    filter: brightness(1.4) drop-shadow(0 0 12px rgba(233, 30, 99, 0.6));
+  }
+
+  .reset-btn {
+    display: block;
+    margin: 12px auto 0;
+    padding: 8px 24px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background: white;
+    color: #666;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover {
+    border-color: #E91E63;
+    color: #E91E63;
   }
 
   .copy-toast {
@@ -228,11 +244,7 @@
 <body>
 
 <div class="header">
-  <h1>
-    <span id="wheelBtn" title="Copy snapshot to clipboard">Wheel</span>
-    <span class="title-of"> of </span>
-    <span id="lifeBtn" title="Save snapshot as image">Life</span>
-  </h1>
+  <h1 id="saveBtn" title="Tap to save as image">Wheel of Life</h1>
   <p class="subtitle">Rate each area of your life from 0 to 100</p>
 </div>
 <div class="copy-toast" id="copyToast"></div>
@@ -243,6 +255,7 @@
       <canvas id="wheel" width="800" height="800"></canvas>
       <div class="center-score" id="centerScore">0</div>
     </div>
+    <button class="reset-btn" id="resetBtn">Reset All</button>
   </div>
 
   <div class="sliders" id="sliders"></div>
@@ -474,38 +487,18 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 2000);
 }
 
-async function captureSnapshot() {
-  const target = document.querySelector('.layout');
-  return html2canvas(target, {
-    backgroundColor: '#ffffff',
-    scale: 2,
-    useCORS: true,
-  });
-}
-
-// WHEEL = copy to clipboard
-document.getElementById('wheelBtn').addEventListener('click', async () => {
+// Save as image (hide reset button from screenshot)
+document.getElementById('saveBtn').addEventListener('click', async () => {
   try {
-    const c = await captureSnapshot();
-    c.toBlob(async (blob) => {
-      try {
-        await navigator.clipboard.write([
-          new ClipboardItem({ 'image/png': blob })
-        ]);
-        showToast('Copied to clipboard!');
-      } catch (err) {
-        showToast('Clipboard not available');
-      }
-    }, 'image/png');
-  } catch (err) {
-    showToast('Snapshot failed');
-  }
-});
-
-// LIFE = save as image
-document.getElementById('lifeBtn').addEventListener('click', async () => {
-  try {
-    const c = await captureSnapshot();
+    const resetBtn = document.getElementById('resetBtn');
+    resetBtn.style.display = 'none';
+    const target = document.querySelector('.layout');
+    const c = await html2canvas(target, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true,
+    });
+    resetBtn.style.display = '';
     c.toBlob((blob) => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -518,6 +511,22 @@ document.getElementById('lifeBtn').addEventListener('click', async () => {
   } catch (err) {
     showToast('Snapshot failed');
   }
+});
+
+// Reset all sliders to 50
+document.getElementById('resetBtn').addEventListener('click', () => {
+  values.fill(50);
+  document.querySelectorAll('.slider-group').forEach((group, i) => {
+    const thumb = group.querySelector('.slider-thumb');
+    const fill = group.querySelector('.slider-fill');
+    const valLabel = group.querySelector('.slider-value');
+    if (thumb) thumb.style.left = '50%';
+    if (fill) fill.style.width = '50%';
+    if (valLabel) valLabel.textContent = '50';
+  });
+  drawWheel();
+  saveState();
+  showToast('Reset to 50');
 });
 </script>
 </body>
